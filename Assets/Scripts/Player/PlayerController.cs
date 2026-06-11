@@ -27,8 +27,15 @@ public class PlayerController : MonoBehaviour
 
     float pitch;
     float verticalVelocity;
-    bool isCrouching;
+    bool isCrouching; // しゃがんているか判定
     bool controlEnabled = true;
+
+    public Vector2 MoveInput { get; private set; }
+    public float InputMagnitude => Mathf.Clamp01(MoveInput.magnitude);
+    public bool IsMoving => InputMagnitude > 0.05f;
+    public bool IsCrouching => isCrouching;
+    public bool IsGrounded => characterController != null && characterController.isGrounded;
+    public bool IsSprinting => sprintAction != null && sprintAction.IsPressed() && !isCrouching && !health.IsDown;
 
     void Awake()
     {
@@ -44,8 +51,8 @@ public class PlayerController : MonoBehaviour
 
     void OnEnable()
     {
-        Cursor.lockState = CursorLockMode.Locked;
-        Cursor.visible = false;
+        Cursor.lockState = CursorLockMode.Locked; // マウスカーソルを中央に固定する
+        Cursor.visible = false; // マウスカーソルを非表示
     }
 
     void Update()
@@ -78,6 +85,15 @@ public class PlayerController : MonoBehaviour
     {
         if (health.IsDown) return;
 
+        Vector2 moveInput = moveAction.ReadValue<Vector2>();
+        bool wantsSprintFromCrouch = sprintAction.IsPressed() && moveInput.sqrMagnitude > 0.01f;
+
+        if (isCrouching && wantsSprintFromCrouch)
+        {
+            isCrouching = false;
+            return;
+        }
+
         if (crouchAction.WasPressedThisFrame())
         {
             isCrouching = !isCrouching;
@@ -86,8 +102,9 @@ public class PlayerController : MonoBehaviour
 
     void UpdateMovement()
     {
-        Vector2 input = moveAction.ReadValue<Vector2>();
-        Vector3 direction = transform.right * input.x + transform.forward * input.y;
+        MoveInput = moveAction.ReadValue<Vector2>();
+
+        Vector3 direction = transform.right * MoveInput.x + transform.forward * MoveInput.y;
         direction = Vector3.ClampMagnitude(direction, 1f);
 
         float speed = GetCurrentSpeed();
@@ -109,7 +126,7 @@ public class PlayerController : MonoBehaviour
     {
         if (health.IsDown) return downSpeed;
         if (isCrouching) return crouchSpeed;
-        if (sprintAction.IsPressed()) return sprintSpeed;
+        if (sprintAction.IsPressed()) return sprintSpeed; // 走った時の速さ
         return walkSpeed;
     }
 

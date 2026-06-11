@@ -30,4 +30,14 @@ public class PlayerHealth : MonoBehaviour
             DownChanged?.Invoke(true);
         }
     }
+
+    public void Recover()
+    {
+        if (!IsDown) return;
+
+        IsDown = false;
+        CurrentHp = maxHp;
+        HpChanged?.Invoke(CurrentHp, maxHp);
+        DownChanged?.Invoke(false);
+    }
 }
