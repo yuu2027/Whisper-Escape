@@ -33,7 +33,7 @@ public abstract class EnemyBaseAI : MonoBehaviour
 
         if (player == null)
         {
-            playerHealth = FindFirstObjectByType<PlayerHealth>();
+            playerHealth = FindAnyObjectByType<PlayerHealth>();
             if (playerHealth != null) player = playerHealth.transform;
         }
         else
@@ -73,6 +73,7 @@ public abstract class EnemyBaseAI : MonoBehaviour
     protected abstract void UpdateState(bool canSeePlayer);
     protected abstract bool AcceptsInvestigation(InvestigationRecipient recipient);
 
+    // プレイヤーを調査する
     public void Investigate(Vector3 position)
     {
         if (CurrentState == EnemyState.Chase || CurrentState == EnemyState.Attack ||
@@ -82,8 +83,8 @@ public abstract class EnemyBaseAI : MonoBehaviour
         }
 
         investigationPosition = position;
-        SetState(EnemyState.Investigate);
-        MoveTo(position);
+        SetState(EnemyState.Investigate); // 調査状態にする
+        MoveTo(position); // 
     }
 
     protected void SetState(EnemyState nextState)
@@ -97,11 +98,15 @@ public abstract class EnemyBaseAI : MonoBehaviour
     protected void MoveTo(Vector3 position)
     {
         agent.isStopped = false;
+        // NavMeshAgentに目的地を設定する関数
+        // 敵をpositionの位置まで移動させる
         agent.SetDestination(position);
     }
 
     protected bool HasReachedDestination()
     {
+        // pathPending:NavMeshAgentが現在、経路を計算中かどうか remainingDistance:NavMeshAgentの現在位置から目的地までの残り距離
+        // 経路計算中ではないかつ目的地までの残り距離が十分小さいときtrue
         return !agent.pathPending &&
                agent.remainingDistance <= waypointReachDistance;
     }
@@ -113,24 +118,26 @@ public abstract class EnemyBaseAI : MonoBehaviour
         if (!agent.hasPath || HasReachedDestination())
         {
             MoveTo(patrolPoints[patrolIndex].position);
-            patrolIndex = (patrolIndex + 1) % patrolPoints.Length;
+            patrolIndex = (patrolIndex + 1) % patrolPoints.Length; // 次の巡回位置に更新
         }
     }
 
+    // 視界にプレイヤーを見つけたか判定
     protected bool CanSeePlayer()
     {
         if (player == null || playerHealth == null || playerHealth.IsDown) return false;
 
-        Vector3 origin = eyePoint.position;
-        Vector3 target = player.position + Vector3.up;
-        Vector3 toPlayer = target - origin;
+        Vector3 origin = eyePoint.position; // 敵の視界の位置
+        Vector3 target = player.position + Vector3.up; // プレイヤーの足元ではなく、少し上の位置を見る
+        Vector3 toPlayer = target - origin; // プレイヤーへの方向
 
-        if (toPlayer.magnitude > viewDistance) return false;
+        if (toPlayer.magnitude > viewDistance) return false; // viewDistanceよりも距離が遠いなら見つけられない
 
-        Vector3 flatDirection = Vector3.ProjectOnPlane(toPlayer, Vector3.up);
-        float angle = Vector3.Angle(transform.forward, flatDirection);
+        Vector3 flatDirection = Vector3.ProjectOnPlane(toPlayer, Vector3.up); // y軸方向をフラットにする
+        float angle = Vector3.Angle(transform.forward, flatDirection); // 現在見ている方向とプレイヤー方向との角度を計算
         if (angle > viewAngle * 0.5f) return false;
 
+        // Physics.Raycastは、指定した位置から指定した方向へ見えない線を飛ばし、Colliderに当たるか調べる処理
         if (Physics.Raycast(origin, toPlayer.normalized, out RaycastHit hit, viewDistance, visionBlockMask))
         {
             return hit.transform == player || hit.transform.IsChildOf(player);
@@ -147,11 +154,12 @@ public abstract class EnemyBaseAI : MonoBehaviour
         Investigate(position);
     }
 
+    // GameObjectを選択しているときだけ呼ばれるデバッグ描画用の関数
     protected virtual void OnDrawGizmosSelected()
     {
         Transform eye = eyePoint != null ? eyePoint : transform;
         Gizmos.color = Color.yellow;
-        Gizmos.DrawWireSphere(eye.position, viewDistance);
+        Gizmos.DrawWireSphere(eye.position, viewDistance); // プレイヤーを見つけられる最大距離
 
         Gizmos.color = Color.cyan;
         Gizmos.DrawRay(eye.position, Quaternion.Euler(0f, viewAngle * 0.5f, 0f) * transform.forward * viewDistance);
