@@ -6,6 +6,7 @@ public class AlertEnemyAI : EnemyBaseAI
     [SerializeField] float alertPrepareTime = 2f;
     [SerializeField] float alarmDuration = 3f;
     [SerializeField] float alarmRadius = 12f;
+    [SerializeField] float reactionFallbackTime = 3f;
     [SerializeField] AudioSource alarmAudio;
 
     bool alarmSent;
@@ -28,27 +29,80 @@ public class AlertEnemyAI : EnemyBaseAI
         {
             case EnemyState.Patrol:
                 agent.speed = patrolSpeed;
-                if (canSeePlayer) SetState(EnemyState.AlertPrepare);
-                else UpdatePatrol();
+                agent.isStopped = false;
+
+                if (canSeePlayer)
+                {
+                    StopAgent();
+                    SetState(EnemyState.AlertPrepare);
+                }
+                else
+                {
+                    UpdatePatrol();
+                }
                 break;
 
             case EnemyState.Investigate:
                 agent.speed = patrolSpeed;
-                if (canSeePlayer) SetState(EnemyState.AlertPrepare);
-                else if (HasReachedDestination() && stateTimer >= investigationWaitTime) SetState(EnemyState.Patrol);
+
+                if (canSeePlayer)
+                {
+                    StopAgent();
+                    SetState(EnemyState.AlertPrepare);
+                }
+                else if (HasReachedDestination() && stateTimer >= investigationWaitTime)
+                {
+                    SetState(EnemyState.Patrol);
+                }
                 break;
 
             case EnemyState.AlertPrepare:
-                agent.isStopped = true;
-                if (stateTimer >= alertPrepareTime)
+                StopAgent();
+
+                if (!canSeePlayer)
+                {
+                    SetState(EnemyState.LostPlayer);
+                    break;
+                }
+
+                if (stateTimer >= alertPrepareTime &&
+                    (enemyAnimatorController == null || enemyAnimatorController.IsFoundReactionFinished()))
                 {
                     alarmSent = false;
-                    SetState(EnemyState.Alarm);
+                    agent.isStopped = false;
+                    SetState(EnemyState.Chase);
+                }
+                break;
+
+            case EnemyState.Chase:
+                agent.speed = patrolSpeed;
+
+                if (canSeePlayer)
+                {
+                    agent.isStopped = false;
+                    MoveTo(player.position);
+                }
+                else
+                {
+                    StopAgent();
+                    SetState(EnemyState.LostPlayer);
+                }
+                break;
+
+            case EnemyState.LostPlayer:
+                StopAgent();
+
+                if (enemyAnimatorController == null ||
+                    enemyAnimatorController.IsLostReactionFinished() ||
+                    stateTimer >= reactionFallbackTime)
+                {
+                    agent.isStopped = false;
+                    SetState(EnemyState.Patrol);
                 }
                 break;
 
             case EnemyState.Alarm:
-                agent.isStopped = true;
+                StopAgent();
 
                 if (!alarmSent)
                 {
@@ -71,4 +125,11 @@ public class AlertEnemyAI : EnemyBaseAI
                 break;
         }
     }
+
+    void StopAgent()
+    {
+        agent.isStopped = true;
+        agent.ResetPath();
+    }
+
 }

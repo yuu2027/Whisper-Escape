@@ -1751,6 +1751,12 @@ PrefabInstance:
     - targetCorrespondingSourceObject: {fileID: 919132149155446097, guid: 198fa06127aab2d43ae3d15e7df9ed23, type: 3}
       insertIndex: -1
       addedObject: {fileID: 1223190128}
+    - targetCorrespondingSourceObject: {fileID: 919132149155446097, guid: 198fa06127aab2d43ae3d15e7df9ed23, type: 3}
+      insertIndex: -1
+      addedObject: {fileID: 1223190129}
+    - targetCorrespondingSourceObject: {fileID: 919132149155446097, guid: 198fa06127aab2d43ae3d15e7df9ed23, type: 3}
+      insertIndex: -1
+      addedObject: {fileID: 1223190131}
   m_SourcePrefab: {fileID: 100100000, guid: 198fa06127aab2d43ae3d15e7df9ed23, type: 3}
 --- !u!1 &1223190123 stripped
 GameObject:
@@ -1784,6 +1790,57 @@ NavMeshAgent:
   m_BaseOffset: 0
   m_WalkableMask: 4294967295
   m_ObstacleAvoidanceType: 4
+--- !u!114 &1223190129
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 1223190123}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: a9b8a31f424db394c93930366199c37d, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: Assembly-CSharp::AlertEnemyAI
+  player: {fileID: 1033277533}
+  eyePoint: {fileID: 39964983}
+  patrolPoints:
+  - {fileID: 1686652971}
+  - {fileID: 708847696}
+  viewDistance: 10
+  viewAngle: 90
+  loseSightTime: 3
+  investigationWaitTime: 2
+  waypointReachDistance: 0.4
+  visionBlockMask:
+    serializedVersion: 2
+    m_Bits: 4294967295
+  patrolSpeed: 1.6
+  alertPrepareTime: 2
+  alarmDuration: 3
+  alarmRadius: 12
+  alarmAudio: {fileID: 0}
+  enemyAnimatorController: {fileID: 1223190131}
+--- !u!95 &1223190130 stripped
+Animator:
+  m_CorrespondingSourceObject: {fileID: 5866666021909216657, guid: 198fa06127aab2d43ae3d15e7df9ed23, type: 3}
+  m_PrefabInstance: {fileID: 1223190122}
+  m_PrefabAsset: {fileID: 0}
+--- !u!114 &1223190131
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 1223190123}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 6af13dd67ff1b204a9c7cee05c5943bc, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: Assembly-CSharp::EnemyAnimatorController
+  animator: {fileID: 1223190130}
+  vitualWalkSpeed: 2
+  vitualAlertSpeed: 4
 --- !u!1 &1245560075
 GameObject:
   m_ObjectHideFlags: 0

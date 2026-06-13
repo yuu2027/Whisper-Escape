@@ -13,6 +13,7 @@ public abstract class EnemyBaseAI : MonoBehaviour
     [SerializeField] protected float investigationWaitTime = 2f;
     [SerializeField] protected float waypointReachDistance = 0.4f;
     [SerializeField] protected LayerMask visionBlockMask = ~0;
+    [SerializeField] protected EnemyAnimatorController enemyAnimatorController;
 
     protected NavMeshAgent agent;
     protected PlayerHealth playerHealth;
@@ -39,6 +40,10 @@ public abstract class EnemyBaseAI : MonoBehaviour
         else
         {
             playerHealth = player.GetComponent<PlayerHealth>();
+        }
+        if (enemyAnimatorController == null)
+        {
+            enemyAnimatorController = GetComponent<EnemyAnimatorController>();
         }
     }
 
@@ -68,6 +73,7 @@ public abstract class EnemyBaseAI : MonoBehaviour
         }
 
         UpdateState(canSeePlayer);
+        enemyAnimatorController?.UpdateMovement(CurrentState, agent);
     }
 
     protected abstract void UpdateState(bool canSeePlayer);
@@ -91,8 +97,13 @@ public abstract class EnemyBaseAI : MonoBehaviour
     {
         if (CurrentState == nextState) return;
 
+        EnemyState previousState = CurrentState;
         CurrentState = nextState;
         stateTimer = 0f;
+
+        enemyAnimatorController?.ApplyState(previousState, nextState);
+
+        Debug.Log($"CurrentState:{CurrentState}");
     }
 
     protected void MoveTo(Vector3 position)
